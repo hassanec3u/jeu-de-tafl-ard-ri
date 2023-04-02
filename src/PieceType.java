@@ -1,3 +1,3 @@
 public enum PieceType {
-    ROI, PORTE, BLANC, NOIR
+    ROI, BLANC, NOIR
 }

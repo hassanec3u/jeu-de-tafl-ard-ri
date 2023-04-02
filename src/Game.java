@@ -36,12 +36,6 @@ public class Game {
             return false;
         }
 
-        //empeche le deplacement des portes
-        if (piece.getType() == PieceType.PORTE) {
-            System.out.println("impossible de deplacer une porte de sortie du Roi");
-            return false;
-        }
-
         if (!verifieDeplacemenHorizonVertical(x, y, newX, newY)) {
             return false;
         }
@@ -116,8 +110,9 @@ public class Game {
     }
 
     public boolean isGameOver() {
+        if(plateau.isGameOver()){
+            return true;
+        };
         return false;
     }
-
-
 }
