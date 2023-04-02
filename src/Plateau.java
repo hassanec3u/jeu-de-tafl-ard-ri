@@ -54,10 +54,36 @@ public class Plateau {
         plateau[3][3] = new Piece(PieceType.ROI);
     }
 
-    public void deplacerPiece(Piece piece, int x, int y, int newX, int newY) {
+    public void deplacerPion(Piece piece, int x, int y, int newX, int newY) {
         // Retournez true si le mouvement est valide, false sinon
         plateau[x][y] = null;
         plateau[newX][newY] = piece;
+    }
+
+    public void captureAdeux(Piece piece, int newX, int newY) {
+        int[][] offsets = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}}; // offsets pour les côtés gauche, droit, haut et bas
+        for (int[] offset : offsets) {
+            int x = newX + offset[0];
+            int y = newY + offset[1];
+            if (x >= 0 && x < plateau.length && y >= 0 && y < plateau[0].length) {
+                Piece pieceAdversaire = plateau[x][y];
+                if (pieceAdversaire != null && piece.getType() != pieceAdversaire.getType()) {
+                    int xAllie = x + offset[0];
+                    int yAllie = y + offset[1];
+                    if (xAllie >= 0 && xAllie < plateau.length && yAllie >= 0 && yAllie < plateau[0].length) {
+                        Piece pieceAllie = plateau[xAllie][yAllie];
+                        if (pieceAllie != null && piece.getType() == pieceAllie.getType()) {
+                            retirerPion(x, y);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    public void retirerPion(int x, int y) {
+        plateau[x][y] = null;
     }
 
     public Piece getPiece(int x, int y) {
@@ -126,20 +152,23 @@ public class Plateau {
         return x < taille && y < taille && newX < taille && newY < taille;
     }
 
-
+    public boolean veutAccederAuCoinP(int x, int y, int newX, int newY) {
+        // Vérifie si les pions noirs tentent de se déplacer dans un coin
+        return (newX == 0 && newY == 0) || (newX == 0 && newY == taille - 1) || (newX == taille - 1 && newY == 0) || (newX == taille - 1 && newY == taille - 1);
+    }
 
     public boolean isGameOver() {
         // Vérifier si le roi est dans un coin du plateau
         if (plateau[0][0] != null && plateau[0][0].getType() == PieceType.ROI) {
             return true; // Coin en haut à gauche
         }
-        if (plateau[0][taille-1] != null && plateau[0][taille-1].getType() == PieceType.ROI) {
+        if (plateau[0][taille - 1] != null && plateau[0][taille - 1].getType() == PieceType.ROI) {
             return true; // Coin en haut à droite
         }
-        if (plateau[taille-1][0] != null && plateau[taille-1][0].getType() == PieceType.ROI) {
+        if (plateau[taille - 1][0] != null && plateau[taille - 1][0].getType() == PieceType.ROI) {
             return true; // Coin en bas à gauche
         }
-        if (plateau[taille-1][taille-1] != null && plateau[taille-1][taille-1].getType() == PieceType.ROI) {
+        if (plateau[taille - 1][taille - 1] != null && plateau[taille - 1][taille - 1].getType() == PieceType.ROI) {
             return true; // Coin en bas à droite
         }
         // Le roi n'est pas dans un coin du plateau

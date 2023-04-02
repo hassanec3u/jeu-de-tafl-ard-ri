@@ -11,7 +11,7 @@ public class Main {
         while (!game.isGameOver()) {
             System.out.println(game.getJoueurActu().getNomJoueur() + "'s turn.");
             game.afficherPlateau();
-            System.out.println("Entrer la position actuelle du pion que vous vouliez deplacé (x y)\n et ensuite sa nouvelle position (newX newY) de cette piece:");
+            System.out.println("saisissez  oldX, oldY, newX, newY");
 
             int x = scanner.nextInt();
             int y = scanner.nextInt();
