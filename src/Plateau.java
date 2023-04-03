@@ -1,11 +1,18 @@
 public class Plateau {
     private final Piece[][] plateau;
+    private int nbPionNoir;
+    private int nbPionBlanc;
+
+    private boolean roiEstCapture;
     private final int taille;
 
 
     public Plateau(int taille) {
         this.taille = taille;
         this.plateau = new Piece[taille][taille];
+        this.nbPionNoir = 12;
+        this.nbPionBlanc = 8;
+        this.roiEstCapture = false;
         initialiserPlateuArdi();
     }
 
@@ -63,22 +70,44 @@ public class Plateau {
     public void captureAdeux(Piece piece, int newX, int newY) {
         int[][] offsets = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}}; // offsets pour les côtés gauche, droit, haut et bas
         for (int[] offset : offsets) {
-            int x = newX + offset[0];
-            int y = newY + offset[1];
-            if (x >= 0 && x < plateau.length && y >= 0 && y < plateau[0].length) {
-                Piece pieceAdversaire = plateau[x][y];
-                if (pieceAdversaire != null && piece.getType() != pieceAdversaire.getType()) {
-                    int xAllie = x + offset[0];
-                    int yAllie = y + offset[1];
-                    if (xAllie >= 0 && xAllie < plateau.length && yAllie >= 0 && yAllie < plateau[0].length) {
-                        Piece pieceAllie = plateau[xAllie][yAllie];
-                        if (pieceAllie != null && piece.getType() == pieceAllie.getType()) {
-                            retirerPion(x, y);
+            int xAdversaire = newX + offset[0];
+            int yAdversaire = newY + offset[1];
+            if (xAdversaire >= 0 && xAdversaire < plateau.length && yAdversaire >= 0 && yAdversaire < plateau[0].length) {
+                Piece pieceAdversaire = plateau[xAdversaire][yAdversaire];
+                if (pieceAdversaire != null) {
+                    if (pieceAdversaire.estLeRoi()) {
+                        // Vérifier si le roi est capturé
+                        int count = 0;
+                        for (int[] offset2 : offsets) {
+                            int x = xAdversaire + offset2[0];
+                            int y = yAdversaire + offset2[1];
+                            if (x >= 0 && x < plateau.length && y >= 0 && y < plateau[0].length) {
+                                Piece p = plateau[x][y];
+                                if (p != null && p.estMonAllie(piece)) {
+                                    count++;
+                                }
+                            }
+                        }
+                        if (count == 4) {
+                            retirerPion(xAdversaire, yAdversaire);
+                            roiEstCapture = true;
+                        }
+                    } else {
+                        if (pieceAdversaire.estMonAdversaire(piece)) {
+                            int xAllie = xAdversaire + offset[0];
+                            int yAllie = yAdversaire + offset[1];
+                            if (xAllie >= 0 && xAllie < plateau.length && yAllie >= 0 && yAllie < plateau[0].length) {
+                                Piece pieceAllie = plateau[xAllie][yAllie];
+                                if (pieceAllie != null && pieceAllie.estMonAllie(piece)) {
+                                    retirerPion(xAdversaire, yAdversaire);
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+        miseAjourNbrePions();
     }
 
 
@@ -91,21 +120,7 @@ public class Plateau {
     }
 
 
-    public Joueur getWinner() {
-        //verifie si le roi existe
-     /*       for (int i = 0; i < plateau.length; i++) {
-                for (int j = 0; j < plateau[i].length; j++) {
-                    if (plateau[i][j] == ) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        return null;
-    */
-        return null;
-    }
+
 
     public void afficherPlateau() {
         // Afficher les numéros de colonne
@@ -159,19 +174,46 @@ public class Plateau {
 
     public boolean isGameOver() {
         // Vérifier si le roi est dans un coin du plateau
-        if (plateau[0][0] != null && plateau[0][0].getType() == PieceType.ROI) {
+        if (plateau[0][0] != null && plateau[0][0].estLeRoi()) {
             return true; // Coin en haut à gauche
         }
-        if (plateau[0][taille - 1] != null && plateau[0][taille - 1].getType() == PieceType.ROI) {
+        if (plateau[0][taille - 1] != null && plateau[0][taille - 1].estLeRoi()) {
             return true; // Coin en haut à droite
         }
-        if (plateau[taille - 1][0] != null && plateau[taille - 1][0].getType() == PieceType.ROI) {
+        if (plateau[taille - 1][0] != null && plateau[taille - 1][0].estLeRoi()) {
             return true; // Coin en bas à gauche
         }
-        if (plateau[taille - 1][taille - 1] != null && plateau[taille - 1][taille - 1].getType() == PieceType.ROI) {
+        if (plateau[taille - 1][taille - 1] != null && plateau[taille - 1][taille - 1].estLeRoi()) {
             return true; // Coin en bas à droite
         }
-        // Le roi n'est pas dans un coin du plateau
-        return false;
+        if(roiEstCapture){
+            System.out.println();
+            return true;
+        }
+        return nbPionNoir == 0;
+
     }
+
+    public void miseAjourNbrePions() {
+        int nbPionsNoirs = 0;
+        int nbPionsBlancs = 0;
+        for (Piece[] pieces : plateau) {
+            for (Piece piece : pieces) {
+                if (piece != null) {
+                    if (piece.estUnPionNoir()) {
+                        nbPionsNoirs++;
+                    }
+                    if (piece.estUnPionBlanc()) {
+                        nbPionsBlancs++;
+                    }
+                }
+            }
+
+        }
+        this.nbPionNoir = nbPionsBlancs;
+        this.nbPionBlanc = nbPionsNoirs;
+
+        System.out.println("Nombre de pions noirs: " + nbPionsNoirs + " <-----> Nombre de pions blancs: " + nbPionsBlancs);
+    }
+
 }

@@ -22,6 +22,7 @@ public class Main {
 
         }
 
-        // System.out.println("Game over. " + game.getWinner().getName() + " wins!");
+        game.afficherPlateau();
+         System.out.println("Game over. " + game.afficherGagnant() + " a gagnée!");
     }
 }

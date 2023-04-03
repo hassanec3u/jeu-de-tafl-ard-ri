@@ -23,18 +23,27 @@ public class Game {
         plateau.afficherPlateau();
     }
 
+    public String afficherGagnant( ) {
+        changerJoueur();
+        return joueurActu.getNomJoueur();
+    }
+
     private void changerJoueur() {
         joueurActu = (joueurActu == player1) ? IA : player1;
     }
 
     public boolean isGameOver() {
-        if (plateau.isGameOver()) {
-            return true;
-        }
-        return false;
+        return plateau.isGameOver();
     }
 
     public void jouerTour(int x, int y, int newX, int newY) {
+
+        // vérifie si les coordonnées entrées sont dans les limites du plateau
+        if (!plateau.verifierLimites(x, y, newX, newY)) {
+            System.out.println("l'un de vos valeurs saisis se trouve en dehors des limites du plateau");
+            return;
+        }
+
         Piece piece = plateau.getPiece(x, y);
         // vérifie que la position choisie contient un pion
         if (piece == null) {
@@ -42,11 +51,6 @@ public class Game {
             return;
         }
 
-        // vérifie si les coordonnées entrées sont dans les limites du plateau
-        if (!plateau.verifierLimites(x, y, newX, newY)) {
-            System.out.println("l'un de vos valeurs saisis se trouve en dehors des limites du plateau");
-            return;
-        }
 
         // vérifie si un pion est déjà présent dans la nouvelle position
         if (plateau.getPiece(newX, newY) != null) {
@@ -55,7 +59,7 @@ public class Game {
         }
 
         //empeche au pions noir d'acceder au coins
-        if (piece.getType() == PieceType.NOIR) {
+        if (piece.estUnPionNoir()) {
             if (plateau.veutAccederAuCoinP(x, y, newX, newY)) {
                 System.out.println("un pion noir ne peut pas acceder au sortie du roi");
                 return;
@@ -69,7 +73,7 @@ public class Game {
 
         // vérifie que le joueur aux pions noirs bouge que ses pions
         if (joueurActu.getPieceType() == PieceType.NOIR)
-            if (piece.getType() == PieceType.NOIR) {
+            if (piece.estUnPionNoir()) {
                 plateau.deplacerPion(piece, x, y, newX, newY);
                 plateau.captureAdeux(piece,newX,newY);
                 changerJoueur();
@@ -78,7 +82,7 @@ public class Game {
             }
         else {
             // vérifie que le joueur aux pions blancs bouge que ses pions
-            if (piece.getType() == PieceType.ROI || piece.getType() == PieceType.BLANC) {
+            if (piece.estLeRoi() || piece.estUnPionBlanc()) {
                 plateau.deplacerPion(piece, x, y, newX, newY);
                 plateau.captureAdeux(piece,newX,newY);
                 changerJoueur();
