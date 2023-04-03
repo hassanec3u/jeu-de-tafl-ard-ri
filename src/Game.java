@@ -60,7 +60,7 @@ public class Game {
 
         //empeche au pions noir d'acceder au coins
         if (piece.estUnPionNoir()) {
-            if (plateau.veutAccederAuCoinP(x, y, newX, newY)) {
+            if (plateau.estUneForteresse(newX, newY)) {
                 System.out.println("un pion noir ne peut pas acceder au sortie du roi");
                 return;
             }
@@ -75,7 +75,7 @@ public class Game {
         if (joueurActu.getPieceType() == PieceType.NOIR)
             if (piece.estUnPionNoir()) {
                 plateau.deplacerPion(piece, x, y, newX, newY);
-                plateau.captureAdeux(piece,newX,newY);
+                plateau.capture(piece,newX,newY);
                 changerJoueur();
             } else {
                 System.out.println("Vous pouviez pas deplacer des pions BLANC/ROI");
@@ -84,7 +84,7 @@ public class Game {
             // vérifie que le joueur aux pions blancs bouge que ses pions
             if (piece.estLeRoi() || piece.estUnPionBlanc()) {
                 plateau.deplacerPion(piece, x, y, newX, newY);
-                plateau.captureAdeux(piece,newX,newY);
+                plateau.capture(piece,newX,newY);
                 changerJoueur();
             } else {
                 System.out.println("Vous pouviez pas deplacer des pions NOIR");
