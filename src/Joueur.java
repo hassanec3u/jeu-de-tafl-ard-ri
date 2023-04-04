@@ -1,17 +1,21 @@
 public class Joueur {
     private final String nomJoueur;
-    private final PieceType pieceType;
+    private final JoueurType joueurType;
 
-    public Joueur(String name, PieceType pieceType) {
+    public Joueur(String name, JoueurType joueurType) {
         this.nomJoueur = name;
-        this.pieceType = pieceType;
+        this.joueurType = joueurType;
     }
 
     public String getNomJoueur() {
         return nomJoueur;
     }
 
-    public PieceType getPieceType() {
-        return pieceType;
+    public JoueurType getJoueurType() {
+        return joueurType;
+    }
+
+    public boolean estIA(){
+        return false;
     }
 }

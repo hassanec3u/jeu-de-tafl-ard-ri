@@ -1,14 +1,15 @@
+import java.util.ArrayList;
+
 public class Plateau {
+    private static Plateau instance = null;
     private final Piece[][] plateau;
     private int nbPionNoir;
     private int nbPionBlanc;
-
     private boolean roiEstCapture;
     private final int taille;
 
-
-    public Plateau(int taille) {
-        this.taille = taille;
+    private Plateau() {
+        this.taille = 7;
         this.plateau = new Piece[taille][taille];
         this.nbPionNoir = 12;
         this.nbPionBlanc = 8;
@@ -16,9 +17,11 @@ public class Plateau {
         initialiserPlateuArdi();
     }
 
-
-    public int getTaille() {
-        return taille;
+    public static Plateau getInstance() {
+        if (instance == null) {
+            instance = new Plateau();
+        }
+        return instance;
     }
 
     private void initialiserPlateuArdi() {
@@ -68,6 +71,7 @@ public class Plateau {
         plateau[newX][newY] = piece;
     }
 
+
     public void capture(Piece piece, int newX, int newY) {
         int[][] offsets = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}}; // offsets pour les côtés gauche, droit, haut et bas
         for (int[] offset : offsets) {
@@ -97,7 +101,7 @@ public class Plateau {
                                 }
                             }
                         }
-                        if ( estSurBord(xAdversaire, yAdversaire) || estPresDeForteresseCentrale(xAdversaire,yAdversaire)&& count >= 3) {
+                        if (estSurBord(xAdversaire, yAdversaire) || estPresDeForteresseCentrale(xAdversaire, yAdversaire) && count >= 3) {
                             retirerPion(xAdversaire, yAdversaire);
                             roiEstCapture = true;
                         } else if (estPresDeForteresse(xAdversaire, yAdversaire) && count >= 2) {
@@ -113,7 +117,7 @@ public class Plateau {
                             int yAllie = yAdversaire + offset[1];
                             if (xAllie >= 0 && xAllie < plateau.length && yAllie >= 0 && yAllie < plateau[0].length) {
                                 Piece pieceAllie = plateau[xAllie][yAllie];
-                                if ((pieceAllie != null && pieceAllie.estMonAllie(piece)) || (pieceAllie == null && (estUneForteresseDuCoin(xAllie, yAllie) || estUneForteresseCentrale(xAllie,yAllie) ) )) {
+                                if ((pieceAllie != null && pieceAllie.estMonAllie(piece)) || (estUneForteresseDuCoin(xAllie, yAllie) || estUneForteresseCentrale(xAllie, xAdversaire))) {
                                     retirerPion(xAdversaire, yAdversaire);
                                 }
                             }
@@ -127,10 +131,10 @@ public class Plateau {
     }
 
 
-
+    //Fonction qui capture le roi et ses alliés s'il sont encerclé
     public boolean groupeCapture(int x, int y, boolean[][] visited, boolean[] presenceRoiDansLeGroupe) {
         //ca veut dire le roi ou un allié est sur le bord
-        if (!verifierLimites(x, y, x, y)) {
+        if (cordonnesHorsDuPlateau(x, y)) {
             return false;
         }
 
@@ -220,17 +224,16 @@ public class Plateau {
     }
 
 
-
-    public boolean verifierLimites(int x, int y, int newX, int newY) {
-        return x < taille && y < taille && newX < taille && newY < taille;
+    public boolean cordonnesHorsDuPlateau(int x, int y) {
+        return x >= plateau.length || y >= plateau[0].length;
     }
 
     public boolean estUneForteresseDuCoin(int x, int y) {
-        return (x == 0 && y == 0) || (x == 0 && y == plateau[0].length - 1) || (x == plateau.length - 1 && y == 0) || (x == plateau.length - 1 && y == plateau[0].length - 1) ;
+        return (x == 0 && y == 0) || (x == 0 && y == plateau[0].length - 1) || (x == plateau.length - 1 && y == 0) || (x == plateau.length - 1 && y == plateau[0].length - 1);
     }
 
     public boolean estUneForteresseCentrale(int x, int y) {
-        return  (x == plateau.length / 2 && y == plateau[0].length / 2);
+        return (x == plateau.length / 2 && y == plateau[0].length / 2);
     }
 
     public boolean estSurBord(int x, int y) {
@@ -288,6 +291,10 @@ public class Plateau {
 
     }
 
+    public boolean verifieSiRoiCapture() {
+        return roiEstCapture;
+    }
+
     public void miseAjourNbrePions() {
         int nbPionsNoirs = 0;
         int nbPionsBlancs = 0;
@@ -307,7 +314,134 @@ public class Plateau {
         this.nbPionNoir = nbPionsBlancs;
         this.nbPionBlanc = nbPionsNoirs;
 
-        System.out.println("Nombre de pions noirs: " + nbPionsNoirs + " <-----> Nombre de pions blancs: " + nbPionsBlancs);
+        //System.out.println("Nombre de pions noirs: " + nbPionsNoirs + " <-----> Nombre de pions blancs: " + nbPionsBlancs);
     }
 
+    public boolean jouerTour(int x, int y, int newX, int newY, boolean isIA, JoueurType joueurType) {
+        // vérifie si les coordonnées entrées sont dans les limites du plateau
+        if (cordonnesHorsDuPlateau(x, y) || cordonnesHorsDuPlateau(newX, newY)) {
+            if (!isIA) printMessage("l'un de vos valeurs saisis se trouve en dehors des limites du plateau");
+            return false;
+        }
+
+        Piece piece = getPiece(x, y);
+        // vérifie que la position choisie contient un pion
+        if (piece == null) {
+            if (!isIA) printMessage("Aucun pion sur les coordonnées saisis");
+            return false;
+        }
+
+
+        // vérifie si un pion est déjà présent dans la nouvelle position
+        if (getPiece(newX, newY) != null) {
+            if (!isIA) printMessage("Un pion se trouve a la nouvelle position");
+            return false;
+        }
+
+        //empêche aux pions noirs d'accéder aux coins
+        if (piece.estUnPionNoir()) {
+            if (estUneForteresseDuCoin(newX, newY) || estUneForteresseCentrale(newX, newY)) {
+                if (!isIA) printMessage("un pion noir ne peut pas acceder au sortie du roi");
+                return false;
+            }
+        }
+
+        // oblige les déplacements rectilignes
+        if (!verifieDeplacemenHorizonVertical(x, y, newX, newY)) {
+            if (!isIA) printMessage("deplacement rectiligine obligé");
+            return false;
+        }
+
+        boolean attaquant = joueurType == JoueurType.ATTACK;
+        boolean canMovePiece = (attaquant && piece.estUnPionNoir()) || (!attaquant && (piece.estLeRoi() || piece.estUnPionBlanc()));
+        // vérifie que le joueur aux pions noirs bouge que ses pions
+        if (canMovePiece) {
+            deplacerPion(piece, x, y, newX, newY);
+            capture(piece, newX, newY);
+            // changerJoueur();
+            return true;
+        } else {
+            if (!isIA) {
+                printMessage(attaquant ? "Vous pouviez pas deplacer des pions BLANC/ROI" : "Vous pouviez pas deplacer des pions NOIR");
+            }
+            return false;
+        }
+    }
+
+    private void printMessage(String message) {
+        System.out.println(message);
+    }
+
+    private boolean verifieDeplacemenHorizonVertical(int x, int y, int newX, int newY) {
+        // vérifier si le pion se déplace sur une même ligne ou même colonne
+        if (x == newX || y == newY) {
+            // déplacement horizontal
+            if (x == newX) {
+                // vérifier si la tour ne passe pas par-dessus une autre pièce
+                int pas = (newY > y) ? 1 : -1;
+                for (int i = y + pas; i != newY; i += pas) {
+                    if (unPionEstDejaPresent(x, i)) {
+                        System.out.println("Impossible de deplacer le pion choisi vers cette destination car il y'a deja un pion qui sur le chemin");
+                        return false;
+                    }
+                }
+            }
+            // déplacement vertical
+            else {
+                // vérifier si la tour ne passe pas par-dessus une autre pièce
+                int pas = (newX > x) ? 1 : -1;
+                for (int i = x + pas; i != newX; i += pas) {
+                    if (unPionEstDejaPresent(i, y)) {
+                        System.out.println("Impossible de deplacer le pion choisi vers cette destination car il y'a deja un pion sur le chemin");
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        System.out.println("On ne peut se deplacer qu'en ligne");
+        return false;
+    }
+
+    private boolean unPionEstDejaPresent(int newX, int newY) {
+        return getPiece(newX, newY) != null;
+    }
+
+    public ArrayList<Mouvement> mouvementsPossibles() {
+        ArrayList<Mouvement> mouvements = new ArrayList<>();
+
+        for (int i = 0; i < plateau.length; i++) {
+            for (int j = 0; j < plateau[i].length; j++) {
+                Piece piece = plateau[i][j];
+                if (piece != null) {
+                    if (piece.estUnPionNoir()) {
+                        ArrayList<Mouvement> mouvementsPiece = mouvementsPossiblesPiece(i, j);
+                        mouvements.addAll(mouvementsPiece);
+                    }
+                }
+            }
+        }
+
+        return mouvements;
+    }
+
+    private ArrayList<Mouvement> mouvementsPossiblesPiece(int x, int y) {
+        ArrayList<Mouvement> mouvementsPiece = new ArrayList<>();
+
+        int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}; // directions possibles
+
+        for (int[] dir : directions) {
+            int dx = dir[0];
+            int dy = dir[1];
+
+            int newX = x + dx;
+            int newY = y + dy;
+
+            // Vérifier que le nouveau mouvement ne sort pas du plateau
+            if (jouerTour(x, y, newX, newY, true, JoueurType.DEFEND)) {
+                mouvementsPiece.add(new Mouvement(x, y, newX, newY));
+            }
+        }
+        return mouvementsPiece;
+    }
 }
