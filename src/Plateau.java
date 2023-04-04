@@ -76,10 +76,10 @@ public class Plateau {
             if (xAdversaire >= 0 && xAdversaire < plateau.length && yAdversaire >= 0 && yAdversaire < plateau[0].length) {
                 Piece pieceAdversaire = plateau[xAdversaire][yAdversaire];
                 if (pieceAdversaire != null) {
-                    if (piece.estMonAdversaire(piece)){
+                    if (piece.estMonAdversaire(piece)) {
                         boolean[][] visited = new boolean[plateau.length][plateau[0].length];
                         boolean[] presenceRoiDansLeGroupe = {false};
-                        if(groupeCapture(xAdversaire,yAdversaire,visited,presenceRoiDansLeGroupe)){
+                        if (groupeCapture(xAdversaire, yAdversaire, visited, presenceRoiDansLeGroupe)) {
                             roiEstCapture = true;
                         }
                     }
@@ -97,7 +97,7 @@ public class Plateau {
                                 }
                             }
                         }
-                        if (estSurBord(xAdversaire, yAdversaire) && count >= 3) {
+                        if ( estSurBord(xAdversaire, yAdversaire) || estPresDeForteresseCentrale(xAdversaire,yAdversaire)&& count >= 3) {
                             retirerPion(xAdversaire, yAdversaire);
                             roiEstCapture = true;
                         } else if (estPresDeForteresse(xAdversaire, yAdversaire) && count >= 2) {
@@ -113,7 +113,7 @@ public class Plateau {
                             int yAllie = yAdversaire + offset[1];
                             if (xAllie >= 0 && xAllie < plateau.length && yAllie >= 0 && yAllie < plateau[0].length) {
                                 Piece pieceAllie = plateau[xAllie][yAllie];
-                                if ((pieceAllie != null && pieceAllie.estMonAllie(piece)) || (pieceAllie == null && estUneForteresse(xAllie, yAllie))) {
+                                if ((pieceAllie != null && pieceAllie.estMonAllie(piece)) || (pieceAllie == null && (estUneForteresseDuCoin(xAllie, yAllie) || estUneForteresseCentrale(xAllie,yAllie) ) )) {
                                     retirerPion(xAdversaire, yAdversaire);
                                 }
                             }
@@ -126,24 +126,26 @@ public class Plateau {
         miseAjourNbrePions();
     }
 
+
+
     public boolean groupeCapture(int x, int y, boolean[][] visited, boolean[] presenceRoiDansLeGroupe) {
         //ca veut dire le roi ou un allié est sur le bord
-        if (!verifierLimites(x, y, x, y) ) {
+        if (!verifierLimites(x, y, x, y)) {
             return false;
         }
 
-        if(  visited[x][y] ){
+        if (visited[x][y]) {
             return true;
         }
         visited[x][y] = true;
 
         Piece piece = plateau[x][y];
 
-        if (piece == null ){
+        if (piece == null) {
             return false;
         }
 
-        if(piece.estUnPionNoir()){
+        if (piece.estUnPionNoir()) {
             return true;
         }
 
@@ -159,13 +161,11 @@ public class Plateau {
         for (int[] offset : offsets) {
             int newX = x + offset[0];
             int newY = y + offset[1];
-            encercle = encercle && groupeCapture(newX, newY, visited,presenceRoiDansLeGroupe);
+            encercle = encercle && groupeCapture(newX, newY, visited, presenceRoiDansLeGroupe);
 
         }
-        return encercle ;
+        return encercle;
     }
-
-
 
 
     public void retirerPion(int x, int y) {
@@ -196,6 +196,8 @@ public class Plateau {
                 if (piece == null) {
                     if (isCorner) {
                         System.out.print("\u001B[32m" + "X " + "\u001B[0m");
+                    } else if (i == taille / 2 && j == taille / 2) { // Afficher une croix au milieu du plateau
+                        System.out.print("\u001B[32m" + "X " + "\u001B[0m");
                     } else {
                         System.out.print(". ");
                     }
@@ -218,12 +220,17 @@ public class Plateau {
     }
 
 
+
     public boolean verifierLimites(int x, int y, int newX, int newY) {
         return x < taille && y < taille && newX < taille && newY < taille;
     }
 
-    public boolean estUneForteresse(int x, int y) {
-        return (x == 0 && y == 0) || (x == 0 && y == plateau[0].length - 1) || (x == plateau.length - 1 && y == 0) || (x == plateau.length - 1 && y == plateau[0].length - 1);
+    public boolean estUneForteresseDuCoin(int x, int y) {
+        return (x == 0 && y == 0) || (x == 0 && y == plateau[0].length - 1) || (x == plateau.length - 1 && y == 0) || (x == plateau.length - 1 && y == plateau[0].length - 1) ;
+    }
+
+    public boolean estUneForteresseCentrale(int x, int y) {
+        return  (x == plateau.length / 2 && y == plateau[0].length / 2);
     }
 
     public boolean estSurBord(int x, int y) {
@@ -237,12 +244,26 @@ public class Plateau {
             int xAdjacent = x + offset[0];
             int yAdjacent = y + offset[1];
 
-            if (estUneForteresse(xAdjacent, yAdjacent)) {
+            if (estUneForteresseDuCoin(xAdjacent, yAdjacent)) {
                 return true;
             }
         }
         return false;
 
+    }
+
+    public boolean estPresDeForteresseCentrale(int xAdversaire, int yAdversaire) {
+        int[][] offsets = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}}; // offsets pour les côtés gauche, droit, haut et bas
+
+        for (int[] offset : offsets) {
+            int xAdjacent = xAdversaire + offset[0];
+            int yAdjacent = yAdversaire + offset[1];
+
+            if (estUneForteresseCentrale(xAdjacent, yAdjacent)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isGameOver() {

@@ -23,7 +23,7 @@ public class Game {
         plateau.afficherPlateau();
     }
 
-    public String afficherGagnant( ) {
+    public String afficherGagnant() {
         changerJoueur();
         return joueurActu.getNomJoueur();
     }
@@ -60,7 +60,7 @@ public class Game {
 
         //empeche au pions noir d'acceder au coins
         if (piece.estUnPionNoir()) {
-            if (plateau.estUneForteresse(newX, newY)) {
+            if (plateau.estUneForteresseDuCoin(newX, newY) || plateau.estUneForteresseCentrale(newX, newY)) {
                 System.out.println("un pion noir ne peut pas acceder au sortie du roi");
                 return;
             }
@@ -75,7 +75,7 @@ public class Game {
         if (joueurActu.getPieceType() == PieceType.NOIR)
             if (piece.estUnPionNoir()) {
                 plateau.deplacerPion(piece, x, y, newX, newY);
-                plateau.capture(piece,newX,newY);
+                plateau.capture(piece, newX, newY);
                 changerJoueur();
             } else {
                 System.out.println("Vous pouviez pas deplacer des pions BLANC/ROI");
@@ -84,13 +84,14 @@ public class Game {
             // vérifie que le joueur aux pions blancs bouge que ses pions
             if (piece.estLeRoi() || piece.estUnPionBlanc()) {
                 plateau.deplacerPion(piece, x, y, newX, newY);
-                plateau.capture(piece,newX,newY);
+                plateau.capture(piece, newX, newY);
                 changerJoueur();
             } else {
                 System.out.println("Vous pouviez pas deplacer des pions NOIR");
             }
         }
     }
+
     private boolean verifieDeplacemenHorizonVertical(int x, int y, int newX, int newY) {
         // vérifier si le pion se déplace sur une même ligne ou même colonne
         if (x == newX || y == newY) {
