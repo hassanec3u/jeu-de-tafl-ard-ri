@@ -76,6 +76,14 @@ public class Plateau {
             if (xAdversaire >= 0 && xAdversaire < plateau.length && yAdversaire >= 0 && yAdversaire < plateau[0].length) {
                 Piece pieceAdversaire = plateau[xAdversaire][yAdversaire];
                 if (pieceAdversaire != null) {
+                    if (piece.estMonAdversaire(piece)){
+                        boolean[][] visited = new boolean[plateau.length][plateau[0].length];
+                        boolean[] presenceRoiDansLeGroupe = {false};
+                        if(groupeCapture(xAdversaire,yAdversaire,visited,presenceRoiDansLeGroupe)){
+                            roiEstCapture = true;
+                        }
+                    }
+
                     if (pieceAdversaire.estLeRoi()) {
                         // Vérifier si le roi est capturé
                         int count = 0;
@@ -117,6 +125,47 @@ public class Plateau {
         }
         miseAjourNbrePions();
     }
+
+    public boolean groupeCapture(int x, int y, boolean[][] visited, boolean[] presenceRoiDansLeGroupe) {
+        //ca veut dire le roi ou un allié est sur le bord
+        if (!verifierLimites(x, y, x, y) ) {
+            return false;
+        }
+
+        if(  visited[x][y] ){
+            return true;
+        }
+        visited[x][y] = true;
+
+        Piece piece = plateau[x][y];
+
+        if (piece == null ){
+            return false;
+        }
+
+        if(piece.estUnPionNoir()){
+            return true;
+        }
+
+
+        // Si la pièce est un roi, mettez à jour la variable presenceRoiDansLeGroupe
+        if (piece.estLeRoi()) {
+            presenceRoiDansLeGroupe[0] = true;
+        }
+
+        int[][] offsets = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}}; // offsets pour les côtés gauche, droit, haut et bas
+        boolean encercle = true;
+
+        for (int[] offset : offsets) {
+            int newX = x + offset[0];
+            int newY = y + offset[1];
+            encercle = encercle && groupeCapture(newX, newY, visited,presenceRoiDansLeGroupe);
+
+        }
+        return encercle ;
+    }
+
+
 
 
     public void retirerPion(int x, int y) {
